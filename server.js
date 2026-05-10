@@ -20,13 +20,11 @@ app.get("/", (req, res) => {
 });
 
 app.post("/chat", async (req, res) => {
-  const message = req.body.message;
-
   try {
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "user", content: message }
+        { role: "user", content: req.body.message }
       ]
     });
 
@@ -36,9 +34,7 @@ app.post("/chat", async (req, res) => {
 
   } catch (err) {
     console.log(err);
-    res.json({
-      reply: "AI error"
-    });
+    res.json({ reply: "AI error" });
   }
 });
 
