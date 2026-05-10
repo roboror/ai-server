@@ -1,19 +1,47 @@
-const express = require("express")
-const cors = require("cors")
+const express = require("express");
+const OpenAI = require("openai");
 
-const app = express()
+const app = express();
 
-app.use(cors())
-app.use(express.json())
+app.use(express.json());
 
-app.post("/chat", (req, res) => {
-    const message = req.body.message
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  next();
+});
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+app.get("/", (req, res) => {
+  res.send("AI server running");
+});
+
+app.post("/chat", async (req, res) => {
+  const message = req.body.message;
+
+  try {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "user", content: message }
+      ]
+    });
 
     res.json({
-        reply: "You said: " + message
-    })
-})
+      reply: response.choices[0].message.content
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.json({
+      reply: "AI error"
+    });
+  }
+});
 
 app.listen(process.env.PORT || 3000, () => {
-    console.log("Server started")
-})
+  console.log("running");
+});
