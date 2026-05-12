@@ -1,31 +1,49 @@
 const express = require("express");
+const OpenAI = require("openai");
 
 const app = express();
 
 app.use(express.json());
 
-// CORS (lets TurboWarp talk to it)
+// allow TurboWarp to connect
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   next();
 });
 
-// test route
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
 app.get("/", (req, res) => {
-  res.send("AI SERVER IS RUNNING");
+  res.send("AI SERVER RUNNING");
 });
 
-// chat route (SAFE TEST VERSION)
-app.post("/chat", (req, res) => {
-  const message = req.body.message;
+app.post("/chat", async (req, res) => {
+  try {
+    const message = req.body.message;
 
-  res.json({
-    reply: "You said: " + message
-  });
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "user", content: message }
+      ]
+    });
+
+    res.json({
+      reply: response.choices[0].message.content
+    });
+
+  } catch (err) {
+    console.log(err);
+
+    res.json({
+      reply: "AI error (check API key or billing)"
+    });
+  }
 });
 
-// start server
 app.listen(process.env.PORT || 3000, () => {
-  console.log("Server running");
+  console.log("running");
 });
